@@ -13,4 +13,3 @@ RUN \
 COPY rootfs /
 
 CMD ["/run"]
-#
