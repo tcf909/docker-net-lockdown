@@ -65,44 +65,4 @@ iptables -A OUTPUT -p udp -m owner --gid-owner vpn -j ACCEPT || {
 #HANDLE LOCAL CONNECTIONS
 iptables -A OUTPUT ! -o tun+ -p tcp -m tcp --sport 8443 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 iptables -A OUTPUT ! -o tap+ -p tcp -m tcp --sport 8443 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-
 #iptables -A OUTPUT -j LOG --log-prefix "OUTPUT: DROPPING: "
-
-
-echo "nameserver 209.222.18.222" > /etc/resolv.conf
-echo "nameserver 209.222.18.218" >> /etc/resolv.conf
-
-mkdir -p /dev/net
-
-[[ -c /dev/net/tun ]] || mknod -m 0666 /dev/net/tun c 10 200
-
-COUNT=0
-while true; do
-
-    VPN_SERVER="$(eval echo "\$OPENVPN_${COUNT}_SERVER")"
-
-    if [[ -z "${VPN_SERVER}" ]]; then
-
-        [[ "${COUNT}" == "0" ]] && exit 1
-
-        jobs
-
-        wait -n
-
-        killall openvpn || exit 1
-
-        wait
-
-        COUNT=0
-
-    else
-
-        exec sg vpn -c "openvpn --config /etc/openvpn/vpn.conf --remote ${VPN_SERVER}" &
-
-        sleep 10
-
-        (( COUNT++ ))
-
-    fi
-
-done
