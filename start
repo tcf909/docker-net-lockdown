@@ -5,7 +5,7 @@ DEFAULT_RTABLE='lan'
 
 DEFAULT_GW="$(ip route | grep 'default' | awk '{print $3}')"
 DEFAULT_DEV="$(ip route | grep 'default' | awk '{print $5}')"
-DEFAULT_SOURCE="$(ip route | grep 'default' | awk '{print $7}')"
+DEFAULT_SOURCE="$(ip addr show ${DEFAULT_DEV} | grep -m 1 -e 'inet\s' | awk '{print $2}' | sed 's/\/.*//')"
 DEFAULT_NET="$(ip route | grep "dev ${DEFAULT_DEV}" | awk -v device="${DEFAULT_DEV}" '$3 == device {print $1}')"
 DEFAULT_NET_SOURCE="$(ip route | grep "dev ${DEFAULT_DEV}" | awk -v device="${DEFAULT_DEV}" '$3 == device {print $9}')"
 
@@ -71,8 +71,8 @@ iptables -A OUTPUT -p udp -m owner --cmd-owner openvpn -j ACCEPT || {
 iptables -A OUTPUT ! -o tun+ -p tcp -m tcp --sport 8443 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 iptables -A OUTPUT ! -o tap+ -p tcp -m tcp --sport 8443 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 #RSYNC SERVER
-iptables -A OUTPUT ! -o tun+ -p tcp -m tcp --dport 873 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-iptables -A OUTPUT ! -o tap+ -p tcp -m tcp --dport 873 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A OUTPUT ! -o tun+ -p tcp -m tcp --dport 873 -j ACCEPT
+iptables -A OUTPUT ! -o tap+ -p tcp -m tcp --dport 873 -j ACCEPT
 iptables -A OUTPUT -d 100.64.0.10/32 -p udp -m udp --dport 53 -j ACCEPT
 iptables -A OUTPUT -d 100.64.0.10/32 -p tcp -m tcp --dport 53 -j ACCEPT
 #iptables -A OUTPUT -j LOG --log-prefix "OUTPUT: DROPPING: "
