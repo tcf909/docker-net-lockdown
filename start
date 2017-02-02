@@ -10,8 +10,8 @@ DEFAULT_NET="$(ip route | grep "dev ${DEFAULT_DEV}" | awk -v device="${DEFAULT_D
 DEFAULT_NET_SOURCE="$(ip route | grep "dev ${DEFAULT_DEV}" | awk -v device="${DEFAULT_DEV}" '$3 == device {print $9}')"
 
 echo 200 ${DEFAULT_RTABLE} >> /etc/iproute2/rt_tables
-#echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter
-#echo 0 > /proc/sys/net/ipv4/conf/eth0/rp_filter
+echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter
+echo 0 > /proc/sys/net/ipv4/conf/eth0/rp_filter
 ip route add default via ${DEFAULT_GW} dev ${DEFAULT_DEV} src ${DEFAULT_SOURCE} table ${DEFAULT_RTABLE}
 ip route add ${DEFAULT_NET} dev ${DEFAULT_DEV} src ${DEFAULT_NET_SOURCE} table ${DEFAULT_RTABLE}
 ip rule add fwmark 1 table ${DEFAULT_RTABLE}
@@ -36,6 +36,9 @@ iptables -t mangle -A OUTPUT -d 100.64.0.0/10 -j MARK --set-mark 1
 
 #MANGLE - POST
 iptables -t mangle -A POSTROUTING -j CONNMARK --save-mark
+
+#NAT - POST
+iptables -t nat -A POSTROUTING -o ${DEFAULT_DEV} -j SNAT --to-source ${DEFAULT_SOURCE}
 
 #VPN
 iptables -I VPN -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
