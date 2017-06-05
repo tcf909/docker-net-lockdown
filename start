@@ -12,8 +12,8 @@ DEFAULT_NET_SOURCE="$(ip route | grep "dev ${DEFAULT_DEV}" | awk -v device="${DE
 echo 200 ${DEFAULT_RTABLE} >> /etc/iproute2/rt_tables
 echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter
 echo 0 > /proc/sys/net/ipv4/conf/eth0/rp_filter
-ip route add default via ${DEFAULT_GW} dev ${DEFAULT_DEV} src ${DEFAULT_SOURCE} table ${DEFAULT_RTABLE}
-ip route add ${DEFAULT_NET} dev ${DEFAULT_DEV} src ${DEFAULT_NET_SOURCE} table ${DEFAULT_RTABLE}
+ip route add default via ${DEFAULT_GW} dev ${DEFAULT_DEV} as ${DEFAULT_SOURCE} table ${DEFAULT_RTABLE}
+ip route add ${DEFAULT_NET} dev ${DEFAULT_DEV} as ${DEFAULT_NET_SOURCE} table ${DEFAULT_RTABLE}
 ip rule add fwmark 1 table ${DEFAULT_RTABLE}
 
 #CLEAN IPTABLES
@@ -30,6 +30,7 @@ iptables -A VPN -j DROP
 iptables -t mangle -A PREROUTING -j CONNMARK --restore-mark
 iptables -t mangle -A PREROUTING -m mark ! --mark 0 -j RETURN
 iptables -t mangle -A PREROUTING -p tcp -m tcp --dport 8443 -j MARK --set-mark 1
+
 
 #MANGlE - OUTPUT
 iptables -t mangle -A OUTPUT -d 10.0.0.0/14 -j MARK --set-mark 1
